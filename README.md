@@ -1,11 +1,11 @@
 # Прогнозирование Оттока Клиентов в Телекоме
 
 End-to-end ML case study на датасете IBM Telco Customer Churn.  
-Этот проект собран как portfolio-grade пример того, как пройти путь от сырых клиентских данных до продуктово-ориентированной retention-стратегии: не просто предсказать churn, а перевести выводы модели в конкретные действия для маркетинга, CRM и продуктовой команды.
+Этот проект собран как portfolio-grade пример того, как пройти путь от сырых клиентских данных до продуктово-ориентированной retention-стратегии: не просто предсказать churn, а перевести выводы модели в конкретные действия для маркетинга.
 
 ## Бизнес-проблема
 
-Телеком-компании теряют регулярную выручку, когда клиенты отключают сервис, понижают тариф или перестают пользоваться платными услугами. Бизнес-цель проекта — заранее находить клиентов с повышенным риском оттока и успевать вмешаться до того, как выручка будет потеряна.
+Цель проекта — заранее находить клиентов с повышенным риском оттока и успевать вмешаться до того, как выручка будет потеряна.
 
 В этом проекте churn prediction рассматривается как задача принятия решения:
 
@@ -14,19 +14,6 @@ End-to-end ML case study на датасете IBM Telco Customer Churn.
 - каких клиентов стоит таргетировать в первую очередь;
 - какой trade-off возникает между поимкой большего числа churn-клиентов и перерасходом retention-бюджета.
 
-## Почему это важно
-
-Прогноз оттока ценен только тогда, когда он помогает бизнесу распределять ограниченные retention-ресурсы лучше, чем массовая одинаковая кампания на всю базу.
-
-На практике это означает:
-
-- снижать предотвратимые потери выручки из-за пропущенных churn-клиентов;
-- приоритизировать high-risk клиентов для CRM-команды;
-- выбирать threshold с учетом стоимости кампаний и доступной емкости каналов;
-- понимать, какие клиентские паттерны сильнее всего связаны с оттоком;
-- превращать сигналы модели в продуктовые и маркетинговые гипотезы.
-
-Проект специально выстроен так, чтобы показать: ML-работа может быть одновременно технически качественной и коммерчески полезной.
 
 ## Бизнес-эффект
 
@@ -59,11 +46,6 @@ End-to-end ML case study на датасете IBM Telco Customer Churn.
 - поведение в оплате,
 - ежемесячные и накопленные платежи.
 
-Замечания по качеству данных:
-
-- `TotalCharges` в raw-файле хранится как текст и содержит пустые строки для части клиентов с нулевым tenure;
-- target умеренно несбалансирован: примерно `73.5%` non-churn против `26.5%` churn.
-
 ## Структура проекта
 
 ```text
@@ -85,18 +67,6 @@ End-to-end ML case study на датасете IBM Telco Customer Churn.
     └── utils.py
 ```
 
-## Методология
-
-Workflow намеренно организован как полноценный ML-проект, а не как быстрый ноутбук-эксперимент.
-
-### 1. Подготовка данных
-
-- загружен raw IBM Telco dataset;
-- провалидирована схема и проверены дубликаты;
-- обработаны скрытые пропуски в `TotalCharges`;
-- нормализованы бизнес-читабельные категориальные признаки;
-- сохранен clean dataset для дальнейшей работы.
-
 ### 2. Exploratory Data Analysis
 
 - проанализировано распределение churn и class imbalance;
@@ -104,38 +74,21 @@ Workflow намеренно организован как полноценный
 - профилированы категориальные драйверы churn, такие как contract type, internet service, payment method и add-on services;
 - сформулированы предмодельные бизнес-гипотезы для retention.
 
-### 3. Feature Engineering
+### 3. Добавления к данным
 
-Добавлены легкие и интерпретируемые признаки, которые улучшают моделирование без data leakage:
+Добавлены легкие и интерпретируемые признаки, которые улучшают моделирование без утечки данных:
 
 - `tenure_group`
 - `is_new_customer`
 - `num_services`
 - `avg_monthly_spend_proxy`
 - `has_auto_payment`
-
-### 4. Preprocessing
-
-- выполнен stratified train/test split;
-- разделены numeric и categorical feature groups;
-- применен one-hot encoding для категориальных признаков;
-- добавлен scaling для Logistic Regression;
-- весь preprocessing строится без leakage и fit-ится только на train data.
-
+- 
 ### 5. Моделирование
 
 - baseline classifier;
 - Logistic Regression;
 - Random Forest.
-
-### 6. Evaluation и decision layer
-
-- accuracy, precision, recall, ROC-AUC;
-- confusion matrices;
-- сравнение ROC curves;
-- threshold tuning;
-- risk segmentation;
-- бизнес-интерпретация false positives и false negatives.
 
 ## Использованные модели
 
@@ -225,37 +178,6 @@ High-risk клиенты чаще всего:
 6. **Построить early-life retention journey.** Сфокусироваться на первых 90-180 днях: onboarding, first-bill communication, раннее выявление проблем.
 7. **Тестировать retention actions по сегментам, а не только глобально.** Правильный save playbook для price-sensitive newcomer не будет тем же самым, что и для billing-friction клиента.
 
-## Ограничения
-
-Это сильный portfolio case study, но его все равно нужно читать с правильными оговорками:
-
-- датасет **observational**, поэтому связи не стоит трактовать как доказанную причинность;
-- данные представляют собой **single snapshot**, а не полную историю клиентских событий;
-- нет явных данных о **campaign cost**, **margin**, **LTV** или **uplift**;
-- часть признаков коррелирована между собой, особенно tenure-related и service-related features;
-- анализ threshold и потерь выручки использует `MonthlyCharges` как **концептуальный proxy**, а не как точную финансовую модель.
-
-## Следующие шаги
-
-Проект можно логично усилить в нескольких направлениях:
-
-- добавить probability calibration и PR-curve analysis;
-- оценить churn impact через assumptions по margin или CLV;
-- ввести segment-specific thresholds для разных retention-каналов;
-- отслеживать post-intervention outcomes и двигаться в сторону uplift modeling;
-- упаковать pipeline в более формальный training/inference workflow;
-- добавить experiment tracking и model monitoring.
-
-## Почему этот проект сильный
-
-Для recruiter или hiring manager этот проект показывает больше, чем базовое умение пользоваться scikit-learn:
-
-- **Product-oriented framing:** работа начинается с бизнес-проблемы, а не с выбора модели;
-- **Reproducible ML workflow:** data preparation, feature engineering, preprocessing, training и evaluation вынесены в `src/`;
-- **Decision-aware evaluation:** анализ выходит за пределы одной accuracy и включает threshold tuning, campaign trade-offs и operating policy;
-- **Interpretability with actionability:** выводы модели переведены в конкретные клиентские сегменты и retention-гипотезы;
-- **Production thinking:** в проекте описано, как скоринги можно встроить в CRM workflow и как их мониторить со временем.
-
 ## Как запустить локально
 
 ```bash
@@ -275,7 +197,7 @@ jupyter notebook notebooks/churn_prediction.ipynb
 
 ## Итог
 
-Этот проект показывает, как превратить стандартный churn dataset в более сильный portfolio case study:
+Этот проект показывает, как превратить стандартный churn dataset в более сильный:
 
 - с чистым ML pipeline;
 - с понятным сравнением моделей;
